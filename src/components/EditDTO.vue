@@ -81,14 +81,14 @@ export default {
           console.log(response.data)
           console.log(response)
           this.$toasted.show(txt, { type: "success", duration: 3000 })
-          this.$router.go(-1)
+          this.$router.push('/Database')
         })
         .catch(error => {
             CRUDService.showError(this.$toasted, error)
         });
     },
     onCancel() {
-      this.$router.go(-1)
+      this.$router.push('/Database')
     }
   },
   created() {

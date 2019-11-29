@@ -55,11 +55,11 @@ export default class AuthService {
   }
 
 // signin and acquire a token silently with POPUP flow. Fall back in case of failure with silent acquisition to popup
-signIn() {
+signIn(vm) {
   return new Promise((resolve, reject) => {
     this.app.loginPopup().then(loginResponse => {
       console.log('loginPopup:', loginResponse)
-      this.getToken().then(tokenResponse => {
+      this.getToken(vm).then(tokenResponse => {
         console.log('token aquired after signIn')
         resolve(tokenResponse)
       })
@@ -74,12 +74,12 @@ signIn() {
   })
 }
 //acquire a token silently
-getToken() {
+getToken(vm) {
   console.log('getting jwt token...')
   return new Promise((resolve, reject) => {  
     this.app.acquireTokenSilent(this.tokenRequest)
     .then(authResponse => { 
-      this.loggedIn = true
+      vm.$store.commit('setLoggedIn', true)
       console.log("token acquired:",authResponse);
       resolve(authResponse)
     })
@@ -87,35 +87,67 @@ getToken() {
       console.log("fallback to interaction when silent call fails", error);
       this.app.acquireTokenPopup(this.tokenRequest)
       .then(tokenResponse => {
-        this.loggedIn = true
+        vm.$store.commit('setLoggedIn', true)
         resolve(tokenResponse)
       })
       .catch(error => {
-        this.loggedIn = false
+        vm.$store.commit('setLoggedIn', false)
         reject(error)
       })
     })
   })
 }
 
-isLoggedIn() {
+isLoggedIn(vm) {
   return new Promise((resolve, reject) => {  
     this.app.acquireTokenSilent(this.tokenRequest)
     .then(authResponse => { 
-      this.loggedIn = true
+      vm.$store.commit('setLoggedIn', true)
+      console.log('acquired token silently -> logged in')
       resolve(authResponse)
     })
     .catch(error => {
         this.loggedIn = false
+        console.log('failed to acquire token silently -> not logged in')
         reject(error)
     })
   })
 }
 
+ensureLoggedIn(vm) {
+  return new Promise((resolve, reject) => {
+      this.isLoggedIn(vm).then(tokenResponse => {
+          resolve(tokenResponse)
+      })
+      .catch(() => {
+          let message = `You need to be signed in to perform this operation. Do you want to sign in now?`
+          vm.$bvModal.msgBoxConfirm(message,{
+          title: 'Sign in'
+          })
+          .then(value => {
+              if (value === true) {
+                  this.signIn(vm).then(loginResponse => {
+                      resolve(loginResponse)
+                  })
+                  .catch(error => {
+                      let txt = `Sign in failed with error: ${error}`
+                      vm.$toasted.show(txt, { type: "error", duration: null })
+                      reject(error)
+                  })
+              }
+          })
+          .catch(error => {
+              reject(error)
+          })
+      })
+  })
+}
+
 // signout the user
-logout() {
+logout(vm) {
   // Removes all sessions, need to call AAD endpoint to do full logout
   this.app.logout();
+  vm.$store.commit('setLoggedIn', false)
   this.loggedIn = false
 }
 }

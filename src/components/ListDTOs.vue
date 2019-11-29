@@ -96,7 +96,7 @@ export default {
         return `Edit ${this.api[this.apiIndex].TitleForSingle.toLowerCase()} ${this.dtoName(id)}`
     },
     onDelete(id) {
-        this.checkLoggedIn().then(() => {
+        this.$AuthService.ensureLoggedIn(this).then(() => {
             let message = `Are you sure you want to delete information about ${this.api[this.apiIndex].TitleForSingle.toLowerCase()} ${this.dtoName(id)}`
             this.$bvModal.msgBoxConfirm(message,{
             title: 'Confirmation'
@@ -113,7 +113,7 @@ export default {
         })
     },
     deleteDTO(idx, id) {
-        this.$AuthService.getToken()
+        this.$AuthService.getToken(this)
         .then(tokenResponse => {
             CRUDService.delete(idx, id, tokenResponse.accessToken)
             .then(response => {
@@ -141,7 +141,7 @@ export default {
         this.schematool.schema = null
         this.dtos = []
         /*
-        this.$AuthService.getToken()
+        this.$AuthService.getToken(this)
         .then(tokenResponse => {
             return CRUDService.getList(this.apiIndex,tokenResponse.accessToken)
         })
@@ -155,42 +155,10 @@ export default {
         })
         .catch(error => {
             this.dtos = []
-            console.log('no mikä')
             CRUDService.showError(this.$toasted, error)
         })
         .finally(() => {
             this.loading = false
-            console.log('finally!')
-        })
-    },
-    checkLoggedIn() {
-        return new Promise((resolve, reject) => {
-            this.$AuthService.isLoggedIn().then(tokenResponse => {
-                resolve(tokenResponse)
-            })
-            .catch(() => {
-                let message = `You need to be signed in to delete records. Do you want to sign in now?`
-                this.$bvModal.msgBoxConfirm(message,{
-                title: 'Sign in'
-                })
-                .then(value => {
-                    if (value === true) {
-                        this.$AuthService.signIn().then(loginResponse => {
-                            this.$store.commit('setLoggedIn', true)
-                            resolve(loginResponse)
-                        })
-                        .catch(error => {
-                            this.$store.commit('setLoggedIn', false)
-                            let txt = `Sign in failed with error: ${error}`
-                            this.$toasted.show(txt, { type: "error", duration: null })
-                            reject(error)
-                        })
-                    }
-                })
-                .catch(error => {
-                    reject(error)
-                })
-            })
         })
     }
   },

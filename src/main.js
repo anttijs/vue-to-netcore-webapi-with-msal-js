@@ -8,7 +8,6 @@ import BootstrapVue from 'bootstrap-vue'
 Vue.use(BootstrapVue)
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
-
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faEdit, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -16,8 +15,6 @@ library.add(faEdit)
 library.add(faTrash)
 library.add(faPlus)
 Vue.component('font-awesome-icon', FontAwesomeIcon)
-
-
 import Toasted from 'vue-toasted'
 var toastOptions = {
   action : {
@@ -38,16 +35,8 @@ Vue.prototype.$AuthService = new AuthService()
 
 Vue.config.productionTip = false
 
-Vue.filter('asnumer', function (value, maximumFractionDigits=2, minimumFractionDigits=2) {
-  console.log('moikko')
-  if (!value) return ''
-  return value.toLocaleString('fr-FR', { maximumFractionDigits: maximumFractionDigits, 
-    minimumFractionDigits: minimumFractionDigits, useGrouping: true} )
-})
-
 new Vue({
   router,
   store,
   render: h => h(App)
 }).$mount('#app')
-//router.replace('home')

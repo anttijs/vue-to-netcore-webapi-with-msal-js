@@ -6,43 +6,47 @@
 <script>
 export default {
   name: "Login",
+  beforeRouteEnter (to, from, next) {
+    next(vm => {
+      // access to component instance via `vm`
+      if (from.name !== 'Login') {
+        vm.from = from
+      }
+      next()
+    })
+  },
+  data() {  
+    return { from: 'home' }
+  },
   methods: {
     login() {
       return new Promise((resolve, reject) => {
-        this.$AuthService.signIn()
+        this.$AuthService.signIn(this)
         .then(loginresponse => {
-          this.$store.commit('setLoggedIn', true)
           resolve(loginresponse)
         })
         .catch(error => {
-          this.$store.commit('setLoggedIn', false)
           reject(error)
         })
       })
     },
     logout() {
       return new Promise((resolve) => {
-        this.$AuthService.logout()
-        this.$store.commit('setLoggedIn', false)
+        this.$AuthService.logout(this)
         resolve()
       })
     }
   },
   created() {
-    console.log('created')
-    this.$AuthService.isLoggedIn().
+    this.$AuthService.isLoggedIn(this).
     then(() => {
-      console.log('logging out')
       this.logout().then(() => {
-        console.log("go back after logout")
-        //this.$router.go(-1)
+        console.log("will be redirected to home page by openId")
       })
     })
     .catch(()=> {
-      console.log('logging in')
       this.login().then(() => {
-        console.log("go back after login")
-        this.$router.push('home')
+        this.$router.push(this.from)
       })
     })
   }
