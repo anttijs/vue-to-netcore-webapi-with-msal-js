@@ -1,4 +1,4 @@
-# vuetest
+# vue-to-netcore-webapi-with-msal-js
 
 ## Project setup
 ```
