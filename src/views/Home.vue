@@ -3,30 +3,50 @@
     <br>
     <b-card-group deck>
           <b-card title="Frontend" sub-title="Vue.js" :img-src="require('../assets/vuejs.png')" img-alt="Frontend" img-top >
-            <b-card-text>
-              Frontend developed in Visual Studio Code using Vue single file components, 
-              Vuex, Vue-router, Bootstrapvue, Vue-font-awesome and Axios. 
-              Grid columns and form fields are dynamically created based on schema received from Backend.
-              Vue uses Msal.js library to implement OAuth 2.0 / OpenID Connect standards to sign in to Azure B2C 
-              and obtains jwt id tokens and access tokens to be used against the Backend webapi delete methods. Other api-methods are public.
+            <b-card-text align="left">
+              The frontend is developed in Visual Studio Code using Vue single file components, 
+              Vuex and Vue-router. For the UI, Bootstrapvue and Vue-font-awesome libraries are used.
+              Axios handles the webapi calls.
+            </b-card-text>
+            <b-card-text align="left">
+              Msal.js library is used to implement OAuth 2.0 / OpenID Connect standards to sign in to Azure B2C, 
+              from where jwt id and access tokens are obtained and used to gain access to the backend webapi.
+            </b-card-text>
+            <b-card-text align="left">
+              Grid columns and form fields are dynamically created based on schema received from the backend. 
+              There is only one grid view and Add/Edit view for all three entity types. The views are customized by using the schema.
             </b-card-text>
           </b-card>
           <b-card title="Backend" sub-title=".NET Core 3" :img-src="require('../assets/netcore.png')" img-alt="Backend" img-top>
-          <b-card-text>
-            Backend developed in Visual Studio 2019 using .Net Core WebApi and EntityFrameWork Core.
-            AutoMapper is used for mappings between dto and datamodel classes. 
+          <b-card-text align="left">
+            The backend is developed in Visual Studio 2019 using .Net Core 3 WebApi.
+            EntityFrameWork Core is used for object/relational mapping. 
+            EF Core code first approach generates the database creation scripts for SQL Server database.
+            AutoMapper handles mappings between dto and datamodel classes. 
+          </b-card-text>
+          <b-card-text align="left">
+            The backend uses jwt token authentication to protect the delete endpoints. Other endpoints (get, put, post) are public for testing purposes.
+          </b-card-text>
+          <b-card-text align="left">
             Backend uses reflection and attributes to generate a schema describing the object properties.
             The schema is passed to the frontend, which uses it to generate the UI.
-            The backend protects the delete methods by checking that the http request contains the correct jwt access tokens.
           </b-card-text>
         </b-card>
           <b-card title="Hosting" sub-title="Microsoft Azure" :img-src="require('../assets/azure.png')" img-alt="Hosting" img-top>
-          <b-card-text>
-            Both frontend and backend are hosted in Microsoft Azure as a WebApp and registered in Azure AD B2C. 
+          <b-card-text align="left">
+            Both frontend and backend are hosted in the same Microsoft Azure AppService. 
             The database is an Azure Sql database. IIS has rewrite rules for SPA. 
-            In Azure AD B2C, the backend exposes an api and the frontend is granted access for the api.
-            Google is set up as an external identity provider or the user can sign up with an e-mail account, which is verified.
-            Microsoft Devops is used for deplying the application to Azure and GIT for version control.
+          </b-card-text>
+          <b-card-text align="left">
+            Both frontend and backend are registered applications in Azure AD B2C.
+            The backend exposes an api and the frontend is granted access for the api.
+            Google is set up as an external identity provider or the user can sign up with a verified e-mail account.
+          </b-card-text>
+          <b-card-text align="left">
+            Microsoft Devops is used for deploying the application to Azure.
+            GIT is used for version control. I have put the sources to GitHub. 
+            Check out the <b-link href="http://www.yle.fi" target="_blank">frontend</b-link>
+            and the <b-link href="http://www.yle.fi" target="_blank">backend.</b-link>
           </b-card-text>
 
         </b-card>
