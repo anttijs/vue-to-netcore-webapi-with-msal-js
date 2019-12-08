@@ -36,22 +36,22 @@ export default {
             // The request was made and the server responded with a status code
             // that falls out of the range of 2xx
             console.log(error.response.data);
-            console.log(error.response.status);
-            console.log(error.response.headers);
-            txt = `Operation failed. The server responded with error ${error.response.status}`
-            toasted.show(txt, { type: "error", duration: null })
+            console.log('CRUDService:',error.response.status);
+            console.log('CRUDService:',error.response.headers);
+            txt = `Operation failed. The server responded with error ${error.response.status}. ${error.response.data}`
+            toasted.show(txt, { type: "error", duration: 5000 })
         } else if (error.request) {
             // The request was made but no response was received
             // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
             // http.ClientRequest in node.js
             console.log(error.request);
             txt = `Operation failed. The server did not respond`
-            toasted.show(txt, { type: "error", duration: null })
+            toasted.show(txt, { type: "error", duration: 5000 })
         } else {
             // Something happened in setting up the request that triggered an Error
             console.log('Error', error.message);
             txt = `Operation failed, reason ${error.message}`
-            toasted.show(txt, { type: "error", duration: null })
+            toasted.show(txt, { type: "error", duration: 5000 })
         }
     }
 

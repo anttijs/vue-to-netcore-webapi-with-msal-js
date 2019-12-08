@@ -14,6 +14,9 @@ There is only one grid view and Add/Edit view for all three entity types. The vi
 npm install
 ```
 
+Edit the files .env.development and .env.production and set your Azure settings there.  
+In order to test the database, the backend needs to be running.
+
 ### Compiles and hot-reloads for development
 ```
 npm run serve

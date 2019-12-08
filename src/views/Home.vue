@@ -5,7 +5,7 @@
           <b-card title="Frontend" sub-title="Vue.js" :img-src="require('../assets/vuejs.png')" img-alt="Frontend" img-top >
             <b-card-text align="left">
               The frontend is developed in Visual Studio Code using Vue single file components, 
-              Vuex and Vue-router. For the UI, Bootstrapvue and Vue-font-awesome libraries are used.
+              Vuex and Vue-router. For the UI, Bootstrapvue, Vue-font-awesome and vue-toasted libraries are used.
               Axios handles the webapi calls.
             </b-card-text>
             <b-card-text align="left">
@@ -45,8 +45,8 @@
           <b-card-text align="left">
             Microsoft Devops is used for deploying the application to Azure.
             GIT is used for version control. I have put the sources to GitHub. 
-            Check out the <b-link href="http://www.yle.fi" target="_blank">frontend</b-link>
-            and the <b-link href="http://www.yle.fi" target="_blank">backend.</b-link>
+            Check out the <b-link href="https://github.com/anttijs/vue-to-netcore-webapi-with-msal-js" target="_blank">frontend</b-link>
+            and the <b-link href="https://github.com/anttijs/schemagenerator" target="_blank">backend.</b-link>
           </b-card-text>
 
         </b-card>
@@ -56,7 +56,7 @@
 
 <script>
 export default {
-  name: 'home',
+  name: 'Home',
   components: {
 
   }

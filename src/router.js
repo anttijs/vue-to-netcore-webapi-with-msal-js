@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import Home from './views/Home.vue'
 import Login from '@/views/Login.vue'
+import About from '@/views/About.vue'
 import ListDTOs from '@/components/ListDTOs.vue'
 import EditDTO from '@/components/EditDTO.vue'
 
@@ -12,7 +13,7 @@ export default new Router({
     routes: [
     { 
       path: '', 
-      name: 'home', 
+      name: 'Home', 
       components: {
         default: Home,
         main: Home
@@ -20,7 +21,7 @@ export default new Router({
     },
     { 
       path: '/', 
-      name: 'home2', 
+      name: 'Home2', 
       components: {
         default: Home,
         main: Home
@@ -41,6 +42,14 @@ export default new Router({
     components: {
         default: Login,
         main: Login
+    }
+   },
+   {
+    path: '/About',
+    name: 'About',
+    components: {
+        default: About,
+        main: About
     }
    },
    {

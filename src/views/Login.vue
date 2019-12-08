@@ -16,7 +16,7 @@ export default {
     })
   },
   data() {  
-    return { from: 'home' }
+    return { from: 'Home' }
   },
   methods: {
     login() {
@@ -41,11 +41,12 @@ export default {
     this.$AuthService.isLoggedIn(this).
     then(() => {
       this.logout().then(() => {
-        console.log("will be redirected to home page by openId")
+        console.log("You are logged out, you will be redirected to home page by openId")
       })
     })
     .catch(()=> {
       this.login().then(() => {
+        console.log('You are logged in')
         this.$router.push(this.from)
       })
     })
