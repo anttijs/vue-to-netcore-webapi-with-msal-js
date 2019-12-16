@@ -38,14 +38,15 @@ export default {
     }
   },
   created() {
-    this.$AuthService.isLoggedIn(this).
-    then(() => {
+    this.$AuthService.isLoggedIn(this)
+    .then(() => {
       this.logout().then(() => {
         console.log("You are logged out, you will be redirected to home page by openId")
       })
     })
     .catch(()=> {
-      this.login().then(() => {
+      this.login()
+      .then(() => {
         console.log('You are logged in')
         this.$router.push(this.from)
       })

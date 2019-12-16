@@ -3,29 +3,45 @@
     <template v-if="schematool.schema">
       <form id="submitForm" @submit="onOK">
         <br><h2>{{ formTitle }}</h2><br>
-        <b-container>
-            <div v-for ="(item) in editFields" :key="item.Id">
-                <b-row class="my-1">
-                <b-col sm="3">
-                    <label for="first_">{{ schematool.title(item.Name) }}</label>
-                </b-col>
-                <template v-if="item.Type === 'Enum'">
-                  <b-col sm="9">
-                      <b-form-select v-model="dto[item.Name]" :options="schematool.selectOptions(item.Name) "></b-form-select>
-                  </b-col>
-                </template>
-                <template v-else-if ="item.Type === 'Int32'">
-                  <b-col sm="9">
-                      <b-form-input v-model.number="dto[item.Name]" type="number"></b-form-input>
-                  </b-col>
-                </template>
-                <template v-else>
-                  <b-col sm="9">
-                      <b-form-input v-model="dto[item.Name]" :type="schematool.inputType(item.Name)" required></b-form-input>
-                  </b-col>
-                </template>
-            </b-row>
-            </div>
+        <b-container align="left">
+          <div v-for ="(item) in editFields" :key="item.Id">
+            <b-form-group
+              :id="item.Id"  
+              :label="schematool.label(item)"
+              :label-for="item.Id"
+              label-align="right"
+              label-cols="3"
+              :invalid-feedback="invalidFeedback(item, dto[item.Name])"
+              :valid-feedback="validFeedback()"
+              :state="state(item, dto[item.Name])">
+              <template v-if="item.Type === 'enum'">
+                <b-form-select
+                  :id="item.Id" 
+                  :state="state(item, dto[item.Name])"
+                  v-model="dto[item.Name]" 
+                  :options="item.PropEnums">
+                </b-form-select>
+              </template>
+              <template v-else-if ="item.Type === 'bool'">
+                <b-form-checkbox
+                  :id="item.Id"
+                  :state="state(item, dto[item.Name])"
+                  v-model="dto[item.Name]">
+                  {{ schematool.labelForCheckBox(item) }}
+                </b-form-checkbox>
+              </template>
+              <template v-else>
+                <b-form-input
+                  :id="item.Id"
+                  v-model="dto[item.Name]" 
+                  :state="state(item, dto[item.Name])"
+                  :type="item.InputType" 
+                  :number="schematool.isNumeric(item)"
+                  :pattern="item.Pattern">
+                </b-form-input>
+              </template>
+            </b-form-group>
+           </div>
             <b-row class="my-1">  
                 <b-col sm="8" align-self="end"></b-col>
                 <b-col sm="2" align-self="end"><b-button type="submit" block variant="primary">OK</b-button></b-col>
@@ -39,8 +55,11 @@
 </template>
 
 <script>
-import CRUDService from '@/api-services/CRUDService'
-import schematool from '@/lib/mylib'
+
+import CRUDService from '@/lib/CRUDService'
+import schematool from '@/lib/SchemaTool'
+import { isEqual,cloneDeep } from 'lodash'
+
 export default {
   name: 'EditDTO',
   props: {
@@ -49,35 +68,58 @@ export default {
     dtoName: String
   },
   data () { 
-    return {dto: {}, schematool: schematool }
+    return {dto: {}, schematool: schematool, submitAttempted: false, copydto: {}  }
   },
   computed: {
     editFields() {
-      return this.schematool.schema.Props.filter( obj => { return !obj.Hidden })
+        return this.schematool.editFields()
     },
     formTitle() {
-      var oper = (this.id === -1) ? "Add" : "Edit"
+      const oper = (this.id === -1) ? "Add" : "Edit"
       return `${oper} ${this.dtoName.toLowerCase()}`
-    }  
+    }
   },
   methods: {
+    validFeedback() {
+      return ''
+    },
+    invalidFeedback(prop, dtoObj) {
+      if (this.submitAttempted === false)
+        return ''
+      return this.schematool.invalidFeedback(prop,dtoObj)
+    },
+    state(prop, dtoObj) {
+      if (this.submitAttempted === false)
+        return null
+      return this.schematool.state(prop,dtoObj)
+    },
     getDTO() {
         CRUDService.get(this.apiIndex, this.id)
           .then(response => {
             this.schematool.schema = response.data.schema
             this.dto = response.data.data || {}
+            this.copydto = cloneDeep(this.dto)
           })
           .catch(error => {
             CRUDService.showError(this.$toasted, error)
           });
     },
     onOK(e) {
-
       e.preventDefault()
-      var fn = (this.id === -1) ? CRUDService.post : CRUDService.put
+      this.submitAttempted = true
+      if (isEqual(this.dto,this.copydto) && this.id !== -1) {
+        this.$toasted.show('No changes where made.', { type: "success", duration: 3000 })
+        this.$router.push('/Database')
+        return
+      }
+      if (this.schematool.isValidState(this.dto) === false) {
+        this.$toasted.show('Check field values', { type: "error", duration: 3000 })
+        return
+      }
+      let fn = (this.id === -1) ? CRUDService.post : CRUDService.put
       fn(this.apiIndex, this.dto)
         .then( response => {
-          var txt = response.data
+          let txt = response.data
           console.log(response.data)
           console.log(response)
           this.$toasted.show(txt, { type: "success", duration: 3000 })

@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Home from './views/Home.vue'
+import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
 import About from '@/views/About.vue'
 import ListDTOs from '@/components/ListDTOs.vue'
@@ -9,8 +9,8 @@ import EditDTO from '@/components/EditDTO.vue'
 Vue.use(Router)
 
 export default new Router({
-    mode: 'history',
-    routes: [
+  mode: 'history',
+  routes: [
     { 
       path: '', 
       name: 'Home', 
@@ -29,30 +29,30 @@ export default new Router({
     },
     { path: '*', redirect: '/' },  
     {
-        path: '/Database',
-        name: 'Database',
-        components: {
-            default: ListDTOs,
-            main: ListDTOs
-        }
-   },
-   {
-    path: '/Login',
-    name: 'Login',
-    components: {
+      path: '/Database',
+      name: 'Database',
+      components: {
+        default: ListDTOs,
+        main: ListDTOs
+      }
+    },
+    {
+      path: '/Login',
+      name: 'Login',
+      components: {
         default: Login,
         main: Login
-    }
-   },
-   {
-    path: '/About',
-    name: 'About',
-    components: {
+      }
+    },
+    {
+      path: '/About',
+      name: 'About',
+      components: {
         default: About,
         main: About
-    }
-   },
-   {
+      }
+    },
+    {
       path: '/Database/EditDTO/:dtoName/:apiIndex/:id',
       name: 'EditDTO',
       components: {

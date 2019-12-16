@@ -16,10 +16,10 @@ Vue.component('font-awesome-icon', FontAwesomeIcon)
 import Toasted from 'vue-toasted'
 var toastOptions = {
   action : {
-      text : 'Close',
-      onClick : (e, toastObject) => {
-          toastObject.goAway(0);
-      }
+    text : 'Close',
+    onClick : (e, toastObject) => {
+      toastObject.goAway(0);
+    }
   },
   position: 'top-center',
   type: 'info',
@@ -28,7 +28,7 @@ var toastOptions = {
 }
 Vue.use(Toasted, toastOptions)
 
-import AuthService from '@/msal/index'
+import AuthService from '@/lib/AuthService'
 Vue.prototype.$AuthService = new AuthService()
 
 Vue.config.productionTip = false

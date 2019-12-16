@@ -1,44 +1,47 @@
 import * as Msal from 'msal'
 
 export default class AuthService {
-  constructor() {
-    // The current application coordinates were pre-registered in a B2C tenant.
-    this.appConfig = {
-      b2cScopes: [process.env.VUE_APP_B2CSCOPES]
-    }
-    // request to signin - returns an idToken
-    this.loginRequest = {
-      scopes: this.appConfig.b2cScopes
-    }
-    // request to acquire a token for resource access
-    this.tokenRequest = {
-      scopes: this.appConfig.b2cScopes
-    }
-    // configuration to initialize msal
-    this.msalConfig = {
-        auth: {
-            clientId: process.env.VUE_APP_CLIENTID, 
-            authority: process.env.VUE_APP_AUTHORITY, 
-            validateAuthority: false,
-            postLogoutRedirectUri: process.env.VUE_APP_POSTLOGOUTREDIRECT
-        },
-        cache: {
-            cacheLocation: "localStorage",
-            storeAuthStateInCookie: true
-        }
-    }
-    console.log('Initializing AuthService')
-    this.email=''
-    this.app = new Msal.UserAgentApplication(this.msalConfig);
+
+constructor() {
+  // The current application coordinates were pre-registered in a B2C tenant.
+  this.appConfig = {
+    b2cScopes: [process.env.VUE_APP_B2CSCOPES]
   }
+  // request to signin - returns an idToken
+  this.loginRequest = {
+    scopes: this.appConfig.b2cScopes
+  }
+  // request to acquire a token for resource access
+  this.tokenRequest = {
+    scopes: this.appConfig.b2cScopes
+  }
+  // configuration to initialize msal
+  this.msalConfig = {
+    auth: {
+      clientId: process.env.VUE_APP_CLIENTID, 
+      authority: process.env.VUE_APP_AUTHORITY, 
+      validateAuthority: false,
+      postLogoutRedirectUri: process.env.VUE_APP_POSTLOGOUTREDIRECT
+    },
+    cache: {
+      cacheLocation: "localStorage",
+      storeAuthStateInCookie: true
+    }
+  }
+  console.log('Initializing AuthService')
+  this.email=''
+  this.app = new Msal.UserAgentApplication(this.msalConfig);
+}
 
 // signin and acquire a token silently with POPUP flow. Fall back in case of failure with silent acquisition to popup
 signIn(vm) {
   console.log('Authservice.signin:', this)
   return new Promise((resolve, reject) => {
-    this.app.loginPopup().then(loginResponse => {
+    this.app.loginPopup()
+    .then(loginResponse => {
       console.log('loginPopup:', loginResponse)
-      this.getToken(vm).then(tokenResponse => {
+      this.getToken(vm)
+      .then(tokenResponse => {
         console.log('token aquired after signIn')
         vm.$toasted.show(`You are signed in as ${this.email}`, { type: "success", duration: 3000 })
         resolve(tokenResponse)
@@ -47,13 +50,14 @@ signIn(vm) {
         console.log('loginResponseError in loginPopup:', error);
         reject(error)
       })
-    }).catch(error  => {
+    })
+    .catch(error  => {
       console.log('loginResponseError getToken:', error);
       reject(error)
     })
   })
 }
-//acquire a token silently
+
 getToken(vm) {
   console.log('getting jwt token...')
   return new Promise((resolve, reject) => {  
@@ -76,6 +80,7 @@ getToken(vm) {
     })
   })
 }
+
 setLoggedIn(authResponse, vm) {
   console.log("token acquired:",authResponse);
   if ( authResponse.idToken.claims.hasOwnProperty('emails') &&
@@ -94,41 +99,43 @@ isLoggedIn(vm) {
       resolve(authResponse)
     })
     .catch(error => {
-        this.loggedIn = false
-        console.log('failed to acquire token silently -> not logged in')
-        reject(error)
+      this.loggedIn = false
+      console.log('failed to acquire token silently -> not logged in')
+      reject(error)
     })
   })
 }
 
 ensureLoggedIn(vm) {
   return new Promise((resolve, reject) => {
-      this.isLoggedIn(vm).then(tokenResponse => {
-          resolve(tokenResponse)
+    this.isLoggedIn(vm)
+    .then(tokenResponse => {
+      resolve(tokenResponse)
+    })
+    .catch(() => {
+      let message = `You need to be signed in to perform this operation. Do you want to sign in now?`
+      vm.$bvModal.msgBoxConfirm(message,{
+        title: 'Sign in'
       })
-      .catch(() => {
-          let message = `You need to be signed in to perform this operation. Do you want to sign in now?`
-          vm.$bvModal.msgBoxConfirm(message,{
-          title: 'Sign in'
-          })
-          .then(value => {
-              if (value === true) {
-                  this.signIn(vm).then(loginResponse => {
-                      resolve(loginResponse)
-                  })
-                  .catch(error => {
-                      let txt = `Sign in failed with error: ${error}`
-                      vm.$toasted.show(txt, { type: "error", duration: 5000 })
-                      reject(error)
-                  })
-              }
-          })
-          .catch(error => {
+      .then(value => {
+          if (value === true) {
+            this.signIn(vm).then(loginResponse => {
+                resolve(loginResponse)
+            })
+            .catch(error => {
+              let txt = `Sign in failed with error: ${error}`
+              vm.$toasted.show(txt, { type: "error", duration: 5000 })
               reject(error)
-          })
+            })
+          }
       })
+      .catch(error => {
+        reject(error)
+      })
+    })
   })
 }
+
 logout(vm) {
   console.log('Authservice.signin:', this)
   this.app.logout();
@@ -137,5 +144,6 @@ logout(vm) {
   this.loggedIn = false
   this.email=''
 }
+
 }
 
