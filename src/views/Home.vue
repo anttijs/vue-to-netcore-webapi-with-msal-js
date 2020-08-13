@@ -4,7 +4,7 @@
   <b-card-group deck>
     <b-card title="Frontend" sub-title="Vue.js" :img-src="require('../assets/vuejs.png')" img-alt="Frontend" img-top >
       <b-card-text align="left">
-        The frontend is developed in Visual Studio Code using Vue single file components, 
+        The frontend is developed in Visual Studio Code using Vue single file components, Vue 3 composition api, 
         Vuex and Vue-router. For the UI, Bootstrapvue, Vue-font-awesome and vue-toasted libraries are used.
         Axios handles the webapi calls.
       </b-card-text>

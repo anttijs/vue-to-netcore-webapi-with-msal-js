@@ -1,42 +1,42 @@
 <template>
   <div>
-    <template v-if="schematool.schema">
+    <br><h2>{{ formTitle() }}</h2><br>
+    <template v-if="state.ok && state.schematool.schema">
       <form id="submitForm" @submit="onOK">
-        <br><h2>{{ formTitle }}</h2><br>
         <b-container align="left">
           <div v-for ="(item) in editFields" :key="item.Id">
             <b-form-group
               :id="item.Id"  
-              :label="schematool.label(item)"
+              :label="state.schematool.label(item)"
               :label-for="item.Id"
               label-align="right"
               label-cols="3"
-              :invalid-feedback="invalidFeedback(item, dto[item.Name])"
+              :invalid-feedback="invalidFeedback(item, state.dto[item.Name])"
               :valid-feedback="validFeedback()"
-              :state="state(item, dto[item.Name])">
+              :state="getstate(item, state.dto[item.Name])">
               <template v-if="item.Type === 'enum'">
                 <b-form-select
                   :id="item.Id" 
-                  :state="state(item, dto[item.Name])"
-                  v-model="dto[item.Name]" 
+                  :state="getstate(item, state.dto[item.Name])"
+                  v-model="state.dto[item.Name]" 
                   :options="item.PropEnums">
                 </b-form-select>
               </template>
               <template v-else-if ="item.Type === 'bool'">
                 <b-form-checkbox
                   :id="item.Id"
-                  :state="state(item, dto[item.Name])"
-                  v-model="dto[item.Name]">
-                  {{ schematool.labelForCheckBox(item) }}
+                  :state="getstate(item, state.dto[item.Name])"
+                  v-model="state.dto[item.Name]">
+                  {{ state.schematool.labelForCheckBox(item) }}
                 </b-form-checkbox>
               </template>
               <template v-else>
                 <b-form-input
                   :id="item.Id"
-                  v-model="dto[item.Name]" 
-                  :state="state(item, dto[item.Name])"
+                  v-model="state.dto[item.Name]" 
+                  :state="getstate(item, state.dto[item.Name])"
                   :type="item.InputType" 
-                  :number="schematool.isNumeric(item)"
+                  :number="state.schematool.isNumeric(item)"
                   :pattern="item.Pattern">
                 </b-form-input>
               </template>
@@ -50,91 +50,87 @@
         </b-container>
       </form>
     </template>
-    <b-alert v-else show variant="primary">Loading data, please wait...</b-alert>
+    <b-alert v-else-if ="state.loading" show variant="primary">
+      <b-spinner small variant="primary" label="Spinning"></b-spinner>  Loading data, please wait...</b-alert>
+    <b-alert v-else-if  = "state.ok == false && state.loading == false" show variant="primary"><h2>Failed to load data</h2></b-alert>
   </div>
 </template>
 
 <script>
 
-import CRUDService from '@/lib/CRUDService'
-import schematool from '@/lib/SchemaTool'
-import { isEqual,cloneDeep } from 'lodash'
+import { onMounted, ref } from '@vue/composition-api'
+import { useCrudSingle } from '@/lib/CRUDService'
+import { isEqual } from 'lodash'
 
 export default {
   name: 'EditDTO',
   props: {
     id: Number,
     apiIndex: Number,
-    dtoName: String
+    title: String
   },
-  data () { 
-    return {dto: {}, schematool: schematool, submitAttempted: false, copydto: {}  }
-  },
-  computed: {
-    editFields() {
-        return this.schematool.editFields()
-    },
-    formTitle() {
-      const oper = (this.id === -1) ? "Add" : "Edit"
-      return `${oper} ${this.dtoName.toLowerCase()}`
-    }
-  },
-  methods: {
-    validFeedback() {
+  setup(props, context) {
+
+    const { state, get, post, put, doGet, getErrorText, editFields, formTitle } = useCrudSingle(props, context)    
+    const submitAttempted = ref(false)
+
+    onMounted(() => {
+      console.log('onMounted')
+      doGet(props.apiIndex, props.id)
+        .then(()=>console.log('lopussa, state',state))
+        .catch(error => context.root.$toasted.show(error.message, { type: "error", duration: 5000 }))
+    })
+
+    const validFeedback = () => {
       return ''
-    },
-    invalidFeedback(prop, dtoObj) {
-      if (this.submitAttempted === false)
+    }
+    
+    const invalidFeedback = (prop, dtoObj) => {
+      if (submitAttempted.value === false)
         return ''
-      return this.schematool.invalidFeedback(prop,dtoObj)
-    },
-    state(prop, dtoObj) {
-      if (this.submitAttempted === false)
+      return state.schematool.invalidFeedback(prop,dtoObj)
+    }
+    
+    const getstate = (prop, dtoObj) => {
+      if (submitAttempted.value === false)
         return null
-      return this.schematool.state(prop,dtoObj)
-    },
-    getDTO() {
-        CRUDService.get(this.apiIndex, this.id)
-          .then(response => {
-            this.schematool.schema = response.data.schema
-            this.dto = response.data.data || {}
-            this.copydto = cloneDeep(this.dto)
-          })
-          .catch(error => {
-            CRUDService.showError(this.$toasted, error)
-          });
-    },
-    onOK(e) {
+      return state.schematool.state(prop,dtoObj)
+    }
+    
+    const onOK = (e) => {
+      console.log('onOK',state)
       e.preventDefault()
-      this.submitAttempted = true
-      if (isEqual(this.dto,this.copydto) && this.id !== -1) {
-        this.$toasted.show('No changes where made.', { type: "success", duration: 3000 })
-        this.$router.push('/Database')
+      submitAttempted.value = true
+      if (isEqual(state.dto,state.copydto) && props.id !== -1) {
+        context.root.$toasted.show('No changes where made.', { type: "success", duration: 3000 })
+        context.root.$router.push('/Database')
         return
       }
-      if (this.schematool.isValidState(this.dto) === false) {
-        this.$toasted.show('Check field values', { type: "error", duration: 3000 })
+      if (state.schematool.isValidState(state.dto) === false) {
+        context.root.$toasted.show('Check field values', { type: "error", duration: 3000 })
         return
       }
-      let fn = (this.id === -1) ? CRUDService.post : CRUDService.put
-      fn(this.apiIndex, this.dto)
+      const fn = (props.id === -1) ? post : put
+      fn(props.apiIndex, state.dto)
         .then( response => {
-          let txt = response.data
+          const txt = response.data
           console.log(response.data)
           console.log(response)
-          this.$toasted.show(txt, { type: "success", duration: 3000 })
-          this.$router.push('/Database')
+          context.root.$toasted.show(txt, { type: "success", duration: 3000 })
+          context.root.$router.push('/Database')
         })
         .catch(error => {
-            CRUDService.showError(this.$toasted, error)
+            const txt = getErrorText(error)
+            context.root.$toasted.show(txt, { type: "error", duration: 5000 })
         });
-    },
-    onCancel() {
-      this.$router.push('/Database')
+    } 
+    
+    const onCancel = () => {
+      console.log('onCancel')
+      context.root.$router.push('/Database')
     }
-  },
-  created() {
-    this.getDTO()
+
+    return  { state, get, post, put, doGet, getErrorText, editFields, formTitle, validFeedback, invalidFeedback, onOK, onCancel, getstate }
   }
 }
 </script>

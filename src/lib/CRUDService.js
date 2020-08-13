@@ -1,62 +1,174 @@
 import Axios from 'axios'
+import { reactive, computed } from '@vue/composition-api'
+import { Schematool } from '@/lib/SchemaTool'
+import { cloneDeep } from 'lodash'
+
 const RESOURCE_NAME = process.env.VUE_APP_API_ENDPOINT
-export default {
-  getList(apiIndex) {
-    let endpoint = `${RESOURCE_NAME}/${apiMethods[apiIndex].GetList}`
-    console.log('Axios.get, endpoint:',endpoint, 'apiIndex:', apiIndex)
-    return Axios.get(endpoint);
-  },
 
-  get(apiIndex, id) {
-    let endpoint = `${RESOURCE_NAME}/${apiMethods[apiIndex].GetSingle}/${id}`
-    console.log('Axios.get, endpoint:',endpoint, 'apiIndex:', apiIndex)
-    return Axios.get(endpoint);
-  },
-
-  post(apiIndex, dto) {
-    let endpoint = `${RESOURCE_NAME}/${apiMethods[apiIndex].Post}`
-    console.log('Axios.post, endpoint:',endpoint, 'apiIndex:', apiIndex)
-    return Axios.post(endpoint, dto)
-  },
-
-  put(apiIndex, dto) {
-    let endpoint = `${RESOURCE_NAME}/${apiMethods[apiIndex].Put}/${dto.Id}`
-    console.log('Axios.put, endpoint:',endpoint, 'apiIndex:', apiIndex, 'dto:', dto)
-    return Axios.put(endpoint, dto)
-  },
-
-  delete(apiIndex, id, token) {
-      let endpoint = `${RESOURCE_NAME}/${apiMethods[apiIndex].Delete}/${id}`
-    console.log('Axios.delete, endpoint:',endpoint, 'apiIndex:', apiIndex)
-    return Axios.delete(endpoint, { headers: {"Authorization" : `Bearer ${token}`} });
-  },
-  showError(toasted, error) {
-    let txt=""
-    if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      console.log(error.response.data);
-      console.log('CRUDService:',error.response.status);
-      console.log('CRUDService:',error.response.headers);
-      txt = `Operation failed. The server responded with error ${error.response.status}. ${error.response.data}`
-      toasted.show(txt, { type: "error", duration: 5000 })
-    } else if (error.request) {
-      // The request was made but no response was received
-      // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-      // http.ClientRequest in node.js
-      console.log(error.request);
-      txt = `Operation failed. The server did not respond`
-      toasted.show(txt, { type: "error", duration: 5000 })
-    } else {
-      // Something happened in setting up the request that triggered an Error
-      console.log('Error', error.message);
-      txt = `Operation failed, reason ${error.message}`
-      toasted.show(txt, { type: "error", duration: 5000 })
-    }
-  }
-}
-export const apiMethods = Object.freeze([
+const apiMethods = Object.freeze([
   { GetList: "GetPeople",  GetSingle: "GetPerson", Put: "PutPerson", Post: "PostPerson", Delete: "DeletePerson", TitleForList: "People", TitleForSingle: "Person" },
   { GetList: "GetBooks", GetSingle: "GetBook", Put: "PutBook", Post: "PostBook", Delete: "DeleteBook", TitleForList: "Books", TitleForSingle: "Book" },
   { GetList: "GetMovies",  GetSingle: "GetMovie",  Put: "PutMovie",  Post: "PostMovie",  Delete: "DeleteMovie",  TitleForList: "Movies", TitleForSingle: "Movie" },
 ])
+
+const getErrorText = (error) => {
+  if (error.response) {
+    // The request was made and the server responded with a status code
+    // that falls out of the range of 2xx
+    console.log(error.response.data);
+    console.log('CRUDService:',error.response.status);
+    console.log('CRUDService:',error.response.headers);
+    return `Operation failed. The server responded with error ${error.response.status}. ${error.response.data}`
+  } else if (error.request) {
+    // The request was made but no response was received
+    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+    // http.ClientRequest in node.js
+    console.log(error.request);
+    return `Operation failed. The server did not respond`
+  } else {
+    // Something happened in setting up the request that triggered an Error
+    console.log('Error', error.message);
+    return `Operation failed, reason ${error.message}`
+  }
+}
+
+export const useCrudSingle = (props) => {
+
+  const state = reactive({ 
+    ok: false, 
+    loading: false, 
+    dto: {}, 
+    schematool: new Schematool(null), 
+    submitAttempted: false, 
+    copydto: {}  
+  })
+  
+  const get = (idx, id) => {
+    const endpoint = `${RESOURCE_NAME}/${apiMethods[idx].GetSingle}/${id}`
+    console.log('Axios.get, endpoint:',endpoint, 'apiIndex:', idx)
+    return Axios.get(endpoint)
+  }
+
+  const post = (idx, dto) => {
+    const endpoint = `${RESOURCE_NAME}/${apiMethods[idx].Post}`
+    console.log('Axios.post, endpoint:',endpoint, 'apiIndex:', idx)
+    return Axios.post(endpoint, dto)
+  }
+
+  const put = (idx, dto) => {
+    const endpoint = `${RESOURCE_NAME}/${apiMethods[idx].Put}/${dto.Id}`
+    console.log('Axios.put, endpoint:',endpoint, 'apiIndex:', idx, 'dto:', dto)
+    return Axios.put(endpoint, dto)
+  }
+
+  const doGet = (idx, id) => {
+    state.loading = true
+    state.ok = false
+    return new Promise((resolve, reject) => {
+    get(idx, id)
+      .then(response => {
+        state.schematool = new Schematool(response.data.schema)
+        state.dto = response.data.data || {}
+        state.copydto = cloneDeep(state.dto)
+        state.ok = true
+        resolve()
+      })
+      .catch(error => {
+        const txt = getErrorText(error)
+        state.ok = false
+        reject(new Error(txt))
+      })
+      .finally(() => state.loading = false)
+    })
+  }
+
+  const editFields = computed(() =>  {
+    return state.schematool.editFields()
+  })
+
+  const formTitle = () => {
+    const oper = (props.id === -1) ? "Add" : "Edit"
+    return `${oper} ${props.title.toLowerCase()}`
+  }
+
+  return { state, get, post, put, doGet, getErrorText, editFields, formTitle }
+}
+
+export const useCrudList = (context) => {
+  const state = reactive({
+    dtos: [],
+    schema: {},
+    loading: false,
+    ok: false
+  })
+  const apiIndex = computed({
+    get: () => { 
+      return (context.root.$store.state.apiIndex && context.root.$store.state.apiIndex >= 0) ? context.root.$store.state.apiIndex : 0},
+    set: val => {
+      context.root.$store.commit('setApiIndex', val)
+    }
+  })
+
+  const getList = (idx) => {
+    const endpoint = `${RESOURCE_NAME}/${apiMethods[idx].GetList}`
+    return Axios.get(endpoint);
+  }
+
+  const doGetList = (idx) => {
+      state.loading = true
+      state.schema = {}
+      state.dtos = []
+      state.ok = false
+      return new Promise((resolve, reject) => {  
+      getList(idx)
+      .then(response => {
+        state.dtos = response.data.data || []   
+        state.schema = response.data.schema
+        state.ok = true
+        resolve(response.data) 
+      })
+      .catch(error => {
+        state.dtos = []
+        const txt = getErrorText(error)
+        state.ok = false
+        reject(new Error(txt))
+      })
+      .finally(() => {
+        state.loading = false
+      })
+    })
+  }
+
+  const fields = computed(() =>  {
+      if (!Array.isArray(state.dtos) || !state.dtos.length) {
+        return []
+      }
+      if (!Array.isArray(state.schema.Props) || !state.schema.Props.length) {
+        return []
+      }
+      return state.schema.Props.map(obj => {return {key: obj.Name, label: obj.Title}})
+  }
+  )
+
+  const dtoList = computed(() => apiMethods.map(obj => obj.TitleForList))
+
+  const titleForSingle = computed(() => apiMethods[apiIndex.value].TitleForSingle )
+
+  const titleForList = computed(() => apiMethods[apiIndex.value].TitleForList )
+
+  const dtoName = (id) => {
+    const x = state.dtos.find(obj => { return obj.Id === id})
+    if (x !== undefined) {
+      return x.Name
+    }
+    return "?"
+  }
+
+  const deleteDTO = (idx, id, token) => {
+    const endpoint = `${RESOURCE_NAME}/${apiMethods[idx].Delete}/${id}`
+    console.log('Axios.delete, endpoint:',endpoint, 'apiIndex:', idx)
+    return Axios.delete(endpoint, { headers: {"Authorization" : `Bearer ${token}`} });
+  }
+
+  return { state, apiIndex, doGetList, fields, dtoName, dtoList, titleForSingle, titleForList, deleteDTO, getErrorText }
+}

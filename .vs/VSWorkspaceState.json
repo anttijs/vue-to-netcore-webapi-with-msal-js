@@ -3,11 +3,10 @@
     "",
     "\\public",
     "\\src",
-    "\\src\\api-services",
     "\\src\\assets",
     "\\src\\components",
-    "\\src\\views"
+    "\\src\\lib"
   ],
-  "SelectedNode": "\\src\\views\\MyTest.vue",
+  "SelectedNode": "\\src\\lib\\AuthService.js",
   "PreviewInSolutionExplorer": false
 }

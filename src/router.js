@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Home from '@/views/Home.vue'
-import Login from '@/views/Login.vue'
 import About from '@/views/About.vue'
 import ListDTOs from '@/components/ListDTOs.vue'
 import EditDTO from '@/components/EditDTO.vue'
@@ -37,14 +36,6 @@ export default new Router({
       }
     },
     {
-      path: '/Login',
-      name: 'Login',
-      components: {
-        default: Login,
-        main: Login
-      }
-    },
-    {
       path: '/About',
       name: 'About',
       components: {
@@ -53,7 +44,7 @@ export default new Router({
       }
     },
     {
-      path: '/Database/EditDTO/:dtoName/:apiIndex/:id',
+      path: '/Database/EditDTO/:title/:apiIndex/:id',
       name: 'EditDTO',
       components: {
         default: EditDTO,
@@ -67,7 +58,7 @@ export default new Router({
 function castEditDTOProps(route) {
   let id = route.params.id;
   let apiIndex = route.params.apiIndex
-  let dtoName = route.params.dtoName
+  let title = route.params.title
   if (typeof id !== "number") {
     id = Number(id);
   }
@@ -78,6 +69,6 @@ function castEditDTOProps(route) {
   return {
     id: id,
     apiIndex: apiIndex,
-    dtoName: dtoName
+    title: title
   };
 }
