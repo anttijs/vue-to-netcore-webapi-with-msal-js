@@ -32,7 +32,7 @@ const getErrorText = (error) => {
   }
 }
 
-export const useCrudSingle = (props) => {
+export const useCrudSingle = () => {
 
   const state = reactive({ 
     ok: false, 
@@ -86,12 +86,29 @@ export const useCrudSingle = (props) => {
     return state.schematool.editFields()
   })
 
-  const formTitle = () => {
-    const oper = (props.id === -1) ? "Add" : "Edit"
-    return `${oper} ${props.title.toLowerCase()}`
+  
+  const titleForSingle = (idx) => {
+    return apiMethods[idx].TitleForSingle
   }
 
-  return { state, get, post, put, doGet, getErrorText, editFields, formTitle }
+  return { state, get, post, put, doGet, getErrorText, editFields,titleForSingle }
+}
+
+export const useNaming = (context) => {
+
+  const apiIndex = computed({
+    get: () => { 
+      return (context.root.$store.state.apiIndex && context.root.$store.state.apiIndex >= 0) ? context.root.$store.state.apiIndex : 0},
+    set: val => {
+      context.root.$store.commit('setApiIndex', val)
+    }
+  })
+  
+  const dtoList = computed(() => apiMethods.map(obj => obj.TitleForList))
+  const titleForList = computed(() => apiMethods[apiIndex.value].TitleForList )
+
+
+  return { apiIndex, dtoList, titleForList }
 }
 
 export const useCrudList = (context) => {
@@ -101,16 +118,12 @@ export const useCrudList = (context) => {
     loading: false,
     ok: false
   })
-  const apiIndex = computed({
-    get: () => { 
-      return (context.root.$store.state.apiIndex && context.root.$store.state.apiIndex >= 0) ? context.root.$store.state.apiIndex : 0},
-    set: val => {
-      context.root.$store.commit('setApiIndex', val)
-    }
-  })
-
+  
+  const { apiIndex, dtoList, titleForList } = useNaming(context)
+  
   const getList = (idx) => {
     const endpoint = `${RESOURCE_NAME}/${apiMethods[idx].GetList}`
+    console.log('getList',endpoint)
     return Axios.get(endpoint);
   }
 
@@ -150,25 +163,25 @@ export const useCrudList = (context) => {
   }
   )
 
-  const dtoList = computed(() => apiMethods.map(obj => obj.TitleForList))
-
   const titleForSingle = computed(() => apiMethods[apiIndex.value].TitleForSingle )
 
-  const titleForList = computed(() => apiMethods[apiIndex.value].TitleForList )
-
+  const apiIndexFromTitle = (title) => {
+    return apiMethods.findIndex(obj => obj.TitleForList === title) 
+  }
+  
   const dtoName = (id) => {
-    const x = state.dtos.find(obj => { return obj.Id === id})
+    const x = state.dtos.find(obj => obj.Id === id)
     if (x !== undefined) {
       return x.Name
     }
     return "?"
   }
 
-  const deleteDTO = (idx, id, token) => {
+  const deleteDto = (idx, id, token) => {
     const endpoint = `${RESOURCE_NAME}/${apiMethods[idx].Delete}/${id}`
     console.log('Axios.delete, endpoint:',endpoint, 'apiIndex:', idx)
     return Axios.delete(endpoint, { headers: {"Authorization" : `Bearer ${token}`} });
   }
 
-  return { state, apiIndex, doGetList, fields, dtoName, dtoList, titleForSingle, titleForList, deleteDTO, getErrorText }
+  return { state, apiIndex, apiIndexFromTitle, doGetList, fields, dtoName, dtoList, titleForSingle, titleForList, deleteDto, getErrorText }
 }

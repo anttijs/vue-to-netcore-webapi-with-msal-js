@@ -2,7 +2,7 @@
   <b-container fluid id="app">
     <b-row>
       <b-col>
-        <navbar />
+        <nav-main />
       </b-col>
     </b-row>
     <b-row>
@@ -13,11 +13,11 @@
   </b-container>
 </template>
 <script>
-import Navbar from '@/components/Navbar';
+import NavMain from '@/components/NavMain';
 export default {
   name: 'App',
   components: {
-    Navbar
+    NavMain
   }
 };
 </script>

@@ -46,7 +46,7 @@ export class Schematool
     return ''
   }
   state(prop, dtoObj) {
-    if (prop.Required === false) {
+    if (prop.Required === false && !dtoObj) {
       return true
     }
     if (prop.Required === true && prop.Type === 'enum' && prop.PropEnums.find( ({value}) => value === dtoObj) === undefined) {

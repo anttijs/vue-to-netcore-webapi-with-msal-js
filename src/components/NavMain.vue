@@ -5,7 +5,7 @@
     variant="primary">
     <b-navbar-nav>
       <b-nav-item  exact-active-class="active" :to="{name: 'Home'}">Home</b-nav-item>
-      <b-nav-item  exact-active-class="active" :active="$route.path.includes('Database')" to="/Database">Database</b-nav-item>
+      <b-nav-item  exact-active-class="active" :active="$route.path.includes('Database')" :to="{name: 'RouteForList', params: { title: titleForList }}">Database</b-nav-item>
       <b-nav-item  exact-active-class="active" :to="{name: 'About'}">About</b-nav-item>
     </b-navbar-nav>
     <!-- Right aligned nav items -->
@@ -20,19 +20,19 @@
   </b-navbar>
 </template>
 <script>
+import { useNaming } from '@/lib/CRUDService'
 export default {
-  name: 'Navbar',
+  name: 'NavMain',
    props: {
   },
   setup(props, context) {
-    console.log("navbar setup()")
-    
+    const { titleForList } = useNaming(context)
     const toggleLogin = () => {
       context.root.$AuthService.toggleLogin(context.root)
     }
     //refresh signed in status
     context.root.$AuthService.checkLoggedIn(context.root)
-    return { toggleLogin }
+    return { toggleLogin, titleForList }
   }
 };
 </script>

@@ -16,6 +16,7 @@ library.add(faEdit)
 library.add(faTrash)
 library.add(faPlus)
 Vue.component('font-awesome-icon', FontAwesomeIcon)
+
 import Toasted from 'vue-toasted'
 var toastOptions = {
   action : {

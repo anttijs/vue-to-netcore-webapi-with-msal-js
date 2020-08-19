@@ -2,8 +2,10 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import Home from '@/views/Home.vue'
 import About from '@/views/About.vue'
-import ListDTOs from '@/components/ListDTOs.vue'
-import EditDTO from '@/components/EditDTO.vue'
+import ListDto from '@/components/ListDto.vue'
+import EditDto from '@/components/EditDto.vue'
+import NavDatabase from '@/components/NavDatabase.vue'
+
 
 Vue.use(Router)
 
@@ -18,22 +20,31 @@ export default new Router({
         main: Home
       } 
     },
-    { 
-      path: '/', 
-      name: 'Home2', 
-      components: {
-        default: Home,
-        main: Home
-      } 
-    },
-    { path: '*', redirect: '/' },  
+    { path: '/', redirect: '' },
     {
       path: '/Database',
-      name: 'Database',
       components: {
-        default: ListDTOs,
-        main: ListDTOs
-      }
+        default: NavDatabase,
+        main: NavDatabase
+      },
+      children: [
+        {
+          path: '',
+          name: 'defaultRouteForList',
+          component: ListDto
+        },
+        {
+          path: ':title',
+          name: 'RouteForList',
+          component: ListDto
+        },
+        {
+          path: ':title/:id',
+          name: 'RouteForSingle',
+          component: EditDto,
+          props: castEditDtoProps
+        }
+      ]
     },
     {
       path: '/About',
@@ -43,19 +54,14 @@ export default new Router({
         main: About
       }
     },
-    {
-      path: '/Database/EditDTO/:title/:apiIndex/:id',
-      name: 'EditDTO',
-      components: {
-        default: EditDTO,
-        main: EditDTO
-      },
-      props: ({ main: castEditDTOProps })
-    }
+    { 
+      path: '/*', 
+      redirect: { name: 'Home' } 
+    }  
   ]
 })
 
-function castEditDTOProps(route) {
+function castEditDtoProps(route) {
   let id = route.params.id;
   let apiIndex = route.params.apiIndex
   let title = route.params.title
@@ -65,7 +71,7 @@ function castEditDTOProps(route) {
   if (typeof apiIndex !== "number") {
     apiIndex = Number(apiIndex);
   }
-
+  console.log('routeparams',route.params,id, apiIndex,title)
   return {
     id: id,
     apiIndex: apiIndex,

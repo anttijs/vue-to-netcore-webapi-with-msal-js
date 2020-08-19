@@ -63,7 +63,7 @@ import { useCrudSingle } from '@/lib/CRUDService'
 import { isEqual } from 'lodash'
 
 export default {
-  name: 'EditDTO',
+  name: 'EditDto',
   props: {
     id: Number,
     apiIndex: Number,
@@ -71,8 +71,13 @@ export default {
   },
   setup(props, context) {
 
-    const { state, get, post, put, doGet, getErrorText, editFields, formTitle } = useCrudSingle(props, context)    
+    const { state, get, post, put, doGet, getErrorText, editFields,titleForSingle } = useCrudSingle()    
     const submitAttempted = ref(false)
+
+    const formTitle = () => {
+      const oper = (props.id === -1) ? "Add" : "Edit"
+      return `${oper} ${titleForSingle(props.apiIndex).toLowerCase()}`
+    }
 
     onMounted(() => {
       console.log('onMounted')
@@ -103,12 +108,15 @@ export default {
       submitAttempted.value = true
       if (isEqual(state.dto,state.copydto) && props.id !== -1) {
         context.root.$toasted.show('No changes where made.', { type: "success", duration: 3000 })
-        context.root.$router.push('/Database')
+        context.root.$router.push({ name: 'RouteForList', params: { title: props.title }})
         return
       }
       if (state.schematool.isValidState(state.dto) === false) {
         context.root.$toasted.show('Check field values', { type: "error", duration: 3000 })
         return
+      }
+      else {
+        console.log('outoa')
       }
       const fn = (props.id === -1) ? post : put
       fn(props.apiIndex, state.dto)
@@ -117,7 +125,7 @@ export default {
           console.log(response.data)
           console.log(response)
           context.root.$toasted.show(txt, { type: "success", duration: 3000 })
-          context.root.$router.push('/Database')
+          context.root.$router.push({ name: 'RouteForList', params: { title: props.title }})
         })
         .catch(error => {
             const txt = getErrorText(error)
@@ -127,7 +135,7 @@ export default {
     
     const onCancel = () => {
       console.log('onCancel')
-      context.root.$router.push('/Database')
+      context.root.$router.push({ name: 'RouteForList', params: { title: props.title }})
     }
 
     return  { state, get, post, put, doGet, getErrorText, editFields, formTitle, validFeedback, invalidFeedback, onOK, onCancel, getstate }

@@ -1,6 +1,6 @@
 # vue-to-netcore-webapi-with-msal-js
-The frontend is developed in Visual Studio Code using Vue single file components, 
-Vuex and Vue-router. For the UI, Bootstrapvue and Vue-font-awesome libraries are used.
+The frontend is developed in Visual Studio Code using Vue single file components, Vue 3 composition api,
+Vuex and Vue-router. For the UI, Bootstrapvue, Vue-font-awesome and vue-toasted libraries are used.
 Axios handles the webapi calls.   
 
 Msal.js library is used to implement OAuth 2.0 / OpenID Connect standards to sign in to Azure B2C, 
