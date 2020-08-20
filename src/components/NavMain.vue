@@ -23,7 +23,7 @@
 import { useNaming } from '@/lib/CRUDService'
 export default {
   name: 'NavMain',
-   props: {
+  props: {
   },
   setup(props, context) {
     const { titleForList } = useNaming(context)
