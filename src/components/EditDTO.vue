@@ -103,7 +103,6 @@ export default {
     }
     
     const onOK = (e) => {
-      console.log('onOK',state)
       e.preventDefault()
       submitAttempted.value = true
       if (isEqual(state.dto,state.copydto) && props.id !== -1) {
@@ -114,9 +113,6 @@ export default {
       if (state.schematool.isValidState(state.dto) === false) {
         context.root.$toasted.show('Check field values', { type: "error", duration: 3000 })
         return
-      }
-      else {
-        console.log('outoa')
       }
       const fn = (props.id === -1) ? post : put
       fn(props.apiIndex, state.dto)
@@ -134,7 +130,6 @@ export default {
     } 
     
     const onCancel = () => {
-      console.log('onCancel')
       context.root.$router.push({ name: 'RouteForList', params: { title: props.title }})
     }
 

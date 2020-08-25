@@ -1,7 +1,6 @@
 <template>
   <div>
     <br>
-    
     <b-container fluid>
       <b-row>
         <b-col sm="1" align-self="end">
@@ -15,7 +14,6 @@
         </b-col>
       </b-row>
     </b-container>
-
     <template v-if="state.ok">
     <b-table ref="table" striped hover 
       :items="state.dtos"
@@ -38,7 +36,6 @@
     <b-alert v-else-if ="state.loading" show variant="primary">
       <b-spinner small variant="primary" label="Spinning"></b-spinner>  Loading data, please wait...</b-alert>
     <b-alert v-else-if  = "state.ok == false && state.loading == false" show variant="primary"><h2>Failed to load data</h2></b-alert>
-      
   </div>
 </template>
 
