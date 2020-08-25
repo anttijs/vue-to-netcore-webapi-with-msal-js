@@ -1,7 +1,6 @@
 <template>
   <div>
     <br>
-    
     <b-container fluid>
       <b-row>
         <b-col sm="1" align-self="end">
@@ -15,7 +14,6 @@
         </b-col>
       </b-row>
     </b-container>
-
     <template v-if="state.ok">
     <b-table ref="table" striped hover 
       :items="state.dtos"
