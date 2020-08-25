@@ -36,7 +36,6 @@
     <b-alert v-else-if ="state.loading" show variant="primary">
       <b-spinner small variant="primary" label="Spinning"></b-spinner>  Loading data, please wait...</b-alert>
     <b-alert v-else-if  = "state.ok == false && state.loading == false" show variant="primary"><h2>Failed to load data</h2></b-alert>
-      
   </div>
 </template>
 

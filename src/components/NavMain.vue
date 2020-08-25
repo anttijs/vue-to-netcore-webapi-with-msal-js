@@ -14,9 +14,7 @@
           <b-button exact-active-class="active" variant="primary" 
           @click="toggleLogin()">{{ $AuthService.toggleLoginText.value }}</b-button>
         </b-nav-form>
-
       </b-navbar-nav>
-
   </b-navbar>
 </template>
 <script>
@@ -34,5 +32,5 @@ export default {
     context.root.$AuthService.checkLoggedIn(context.root)
     return { toggleLogin, titleForList }
   }
-};
+}
 </script>
