@@ -28,7 +28,6 @@ export default {
     const emailLink = computed(() => "mailto:" + email.value)
     const years = computed(()=> new Date().getFullYear()-1994)
     
-    
     return {
       profession, email, emailLink, years
     }

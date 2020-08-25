@@ -106,8 +106,7 @@ export const useNaming = (context) => {
   
   const dtoList = computed(() => apiMethods.map(obj => obj.TitleForList))
   const titleForList = computed(() => apiMethods[apiIndex.value].TitleForList )
-
-
+  
   return { apiIndex, dtoList, titleForList }
 }
 
