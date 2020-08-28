@@ -17,7 +17,7 @@
 </template>
 
 <script lang="javascript">
-import { useNaming } from '@/lib/CRUDService'
+import { useNaming } from '@/lib/CrudService'
 
 export default {
   name: 'NavDatabase',

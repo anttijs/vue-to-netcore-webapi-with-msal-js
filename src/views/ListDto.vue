@@ -41,7 +41,7 @@
 
 <script lang="javascript">
 import { watch } from '@vue/composition-api'
-import { useCrudList } from '@/lib/CRUDService'
+import { useCrudList } from '@/lib/CrudService'
 
 export default {
   name: 'ListDto',

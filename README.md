@@ -9,6 +9,8 @@ from where jwt id and access tokens are obtained and used to gain access to the 
 Grid columns and form fields are dynamically created based on schema received from the backend. 
 There is only one grid view and Add/Edit view for all three entity types. The views are customized by using the schema.  
 
+## Demo
+Check it out at [vuewithnetcore.azurewebsites.net](https://vuewithnetcore.azurewebsites.net)
 ## Project setup
 ```
 npm install

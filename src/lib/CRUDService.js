@@ -16,8 +16,8 @@ const getErrorText = (error) => {
     // The request was made and the server responded with a status code
     // that falls out of the range of 2xx
     console.log(error.response.data);
-    console.log('CRUDService:',error.response.status);
-    console.log('CRUDService:',error.response.headers);
+    console.log('CrudService:',error.response.status);
+    console.log('CrudService:',error.response.headers);
     return `Operation failed. The server responded with error ${error.response.status}. ${error.response.data}`
   } else if (error.request) {
     // The request was made but no response was received

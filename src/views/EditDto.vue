@@ -59,7 +59,7 @@
 <script>
 
 import { onMounted, ref } from '@vue/composition-api'
-import { useCrudSingle } from '@/lib/CRUDService'
+import { useCrudSingle } from '@/lib/CrudService'
 import { isEqual } from 'lodash'
 
 export default {

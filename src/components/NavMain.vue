@@ -6,6 +6,7 @@
     <b-navbar-nav>
       <b-nav-item  exact-active-class="active" :to="{name: 'Home'}">Home</b-nav-item>
       <b-nav-item  exact-active-class="active" :active="$route.path.includes('Database')" :to="{name: 'RouteForList', params: { title: titleForList }}">Database</b-nav-item>
+      <b-nav-item  exact-active-class="active" :to="{name: 'BlogPosts'}">Blog</b-nav-item>
       <b-nav-item  exact-active-class="active" :to="{name: 'About'}">About</b-nav-item>
     </b-navbar-nav>
     <!-- Right aligned nav items -->
@@ -18,7 +19,7 @@
   </b-navbar>
 </template>
 <script>
-import { useNaming } from '@/lib/CRUDService'
+import { useNaming } from '@/lib/CrudService'
 export default {
   name: 'NavMain',
   props: {
