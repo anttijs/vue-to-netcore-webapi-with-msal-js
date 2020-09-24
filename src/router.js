@@ -71,18 +71,12 @@ export default new Router({
 
 function castEditDtoProps(route) {
   let id = route.params.id;
-  let apiIndex = route.params.apiIndex
   let title = route.params.title
   if (typeof id !== "number") {
     id = Number(id);
   }
-  if (typeof apiIndex !== "number") {
-    apiIndex = Number(apiIndex);
-  }
-  console.log('routeparams',route.params,id, apiIndex,title)
   return {
     id: id,
-    apiIndex: apiIndex,
     title: title
   };
 }

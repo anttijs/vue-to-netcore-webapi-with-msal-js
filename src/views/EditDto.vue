@@ -1,42 +1,45 @@
 <template>
   <div>
     <br><h2>{{ formTitle() }}</h2><br>
-    <template v-if="state.ok && state.schematool.schema">
+    <b-alert v-if ="loading" show variant="primary">
+      <b-spinner small variant="primary" label="Spinning"></b-spinner>  Loading data, please wait...</b-alert>
+    <b-alert v-else-if  = "error" show variant="primary">Failed to load data</b-alert>
+    <template v-else-if = "dto && schematool">
       <form id="submitForm" @submit="onOK">
         <b-container align="left">
           <div v-for ="(item) in editFields" :key="item.Id">
             <b-form-group
               :id="item.Id"  
-              :label="state.schematool.label(item)"
+              :label="schematool.label(item)"
               :label-for="item.Id"
               label-align="right"
               label-cols="3"
-              :invalid-feedback="invalidFeedback(item, state.dto[item.Name])"
+              :invalid-feedback="invalidFeedback(item, dto[item.Name])"
               :valid-feedback="validFeedback()"
-              :state="getstate(item, state.dto[item.Name])">
+              :state="getState(item, dto[item.Name])">
               <template v-if="item.Type === 'enum'">
                 <b-form-select
                   :id="item.Id" 
-                  :state="getstate(item, state.dto[item.Name])"
-                  v-model="state.dto[item.Name]" 
+                  :state="getState(item, dto[item.Name])"
+                  v-model="dto[item.Name]" 
                   :options="item.PropEnums">
                 </b-form-select>
               </template>
               <template v-else-if ="item.Type === 'bool'">
                 <b-form-checkbox
                   :id="item.Id"
-                  :state="getstate(item, state.dto[item.Name])"
-                  v-model="state.dto[item.Name]">
-                  {{ state.schematool.labelForCheckBox(item) }}
+                  :state="getState(item, dto[item.Name])"
+                  v-model="dto[item.Name]">
+                  {{ schematool.labelForCheckBox(item) }}
                 </b-form-checkbox>
               </template>
               <template v-else>
                 <b-form-input
                   :id="item.Id"
-                  v-model="state.dto[item.Name]" 
-                  :state="getstate(item, state.dto[item.Name])"
+                  v-model="dto[item.Name]" 
+                  :state="getState(item, dto[item.Name])"
                   :type="item.InputType" 
-                  :number="state.schematool.isNumeric(item)"
+                  :number="schematool.isNumeric(item)"
                   :pattern="item.Pattern">
                 </b-form-input>
               </template>
@@ -50,41 +53,40 @@
         </b-container>
       </form>
     </template>
-    <b-alert v-else-if ="state.loading" show variant="primary">
-      <b-spinner small variant="primary" label="Spinning"></b-spinner>  Loading data, please wait...</b-alert>
-    <b-alert v-else-if  = "state.ok == false && state.loading == false" show variant="primary"><h2>Failed to load data</h2></b-alert>
   </div>
 </template>
 
 <script>
 
-import { onMounted, ref } from '@vue/composition-api'
+import { watch, ref } from '@vue/composition-api'
 import { useCrudSingle } from '@/lib/CrudService'
 import { isEqual } from 'lodash'
+import usePromiseFn from '../composables/use-promise'
 
 export default {
   name: 'EditDto',
   props: {
     id: Number,
-    apiIndex: Number,
     title: String
   },
   setup(props, context) {
 
-    const { state, get, post, put, doGet, getErrorText, editFields,titleForSingle } = useCrudSingle()    
     const submitAttempted = ref(false)
+  
+    const { loading, error, use, dto, schematool, copydto, post, put, editFields, titleForSingle,apiIndex, apiIndexFromTitle } = useCrudSingle(context)    
+    const id = () => props.id
+    watch([apiIndex, id], ([idx, id]) => {
+      use(idx, id)
+    })
 
+    watch(error, (error) => {
+      error && context.root.$toasted.show(error, { type: "error", duration: 5000 })
+    })
+    
     const formTitle = () => {
       const oper = (props.id === -1) ? "Add" : "Edit"
-      return `${oper} ${titleForSingle(props.apiIndex).toLowerCase()}`
+      return `${oper} ${titleForSingle(apiIndex.value).toLowerCase()}`
     }
-
-    onMounted(() => {
-      console.log('onMounted')
-      doGet(props.apiIndex, props.id)
-        .then(()=>console.log('lopussa, state',state))
-        .catch(error => context.root.$toasted.show(error.message, { type: "error", duration: 5000 }))
-    })
 
     const validFeedback = () => {
       return ''
@@ -93,47 +95,55 @@ export default {
     const invalidFeedback = (prop, dtoObj) => {
       if (submitAttempted.value === false)
         return ''
-      return state.schematool.invalidFeedback(prop,dtoObj)
+      return schematool.value.invalidFeedback(prop,dtoObj)
     }
     
-    const getstate = (prop, dtoObj) => {
+    const getState = (prop, dtoObj) => {
       if (submitAttempted.value === false)
         return null
-      return state.schematool.state(prop,dtoObj)
+      return schematool.value.state(prop,dtoObj)
     }
     
+
+    // handle Add/Update
+    const { error: errorOK, result: resultOK, use: useOK } = usePromiseFn((props.id === -1) ? post : put)
     const onOK = (e) => {
       e.preventDefault()
       submitAttempted.value = true
-      if (isEqual(state.dto,state.copydto) && props.id !== -1) {
+      if (isEqual(dto.value,copydto.value) && props.id !== -1) {
         context.root.$toasted.show('No changes where made.', { type: "success", duration: 3000 })
         context.root.$router.push({ name: 'RouteForList', params: { title: props.title }})
         return
       }
-      if (state.schematool.isValidState(state.dto) === false) {
+      if (schematool.value.isValidState(dto.value) === false) {
         context.root.$toasted.show('Check field values', { type: "error", duration: 3000 })
         return
       }
-      const fn = (props.id === -1) ? post : put
-      fn(props.apiIndex, state.dto)
-        .then( response => {
-          const txt = response.data
-          console.log(response.data)
-          console.log(response)
-          context.root.$toasted.show(txt, { type: "success", duration: 3000 })
-          context.root.$router.push({ name: 'RouteForList', params: { title: props.title }})
-        })
-        .catch(error => {
-            const txt = getErrorText(error)
-            context.root.$toasted.show(txt, { type: "error", duration: 5000 })
-        });
-    } 
+      useOK(apiIndex.value, dto.value)
+    }
+    watch(errorOK, (errorOK) => {
+      errorOK && context.root.$toasted.show(errorOK, { type: "error", duration: 5000 })
+    })
+    watch(resultOK,(resultOK) => {
+      if (resultOK) {
+        context.root.$toasted.show(resultOK.data, { type: "success", duration: 3000 })
+        context.root.$router.push({ name: 'RouteForList', params: { title: props.title }})
+      }
+    }) 
     
     const onCancel = () => {
       context.root.$router.push({ name: 'RouteForList', params: { title: props.title }})
     }
 
-    return  { state, get, post, put, doGet, getErrorText, editFields, formTitle, validFeedback, invalidFeedback, onOK, onCancel, getstate }
+    return  { loading, error, dto, schematool, copydto, 
+    editFields, formTitle, validFeedback, invalidFeedback, onOK, onCancel, getState, apiIndexFromTitle }
+  },
+  beforeRouteUpdate (to, from, next) {
+    this.apiIndex = this.apiIndexFromTitle(to.params.title)
+    next()
+  },
+  beforeRouteEnter (to, from, next) {
+    next(vm => vm.apiIndex = vm.apiIndexFromTitle(to.params.title))
   }
 }
 </script>

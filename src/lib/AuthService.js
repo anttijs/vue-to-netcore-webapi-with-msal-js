@@ -1,5 +1,6 @@
 import * as Msal from 'msal'
 import { ref, computed } from '@vue/composition-api'
+//import { reject } from 'core-js/fn/promise'
 export default class AuthService {
 
 constructor() {
@@ -108,12 +109,10 @@ ensureLoggedIn(vm) {
       })
       .then(value => {
           if (value === true) {
-            this.login(vm).then(loginResponse => {
-                resolve(loginResponse)
+            this.login(vm).then(message => {
+                resolve(message)
             })
             .catch(error => {
-              const txt = `Sign in failed with error: ${error}`
-              vm.$toasted.show(txt, { type: "error", duration: 5000 })
               reject(error)
             })
           }
@@ -134,43 +133,39 @@ login(vm) {
       this.getToken(vm)
       .then(tokenResponse => {
         console.log('token aquired after login, tokenresponse:',tokenResponse)
-        vm.$toasted.show(`You are signed in as ${this.email.value}`, { type: "success", duration: 3000 })
-        resolve(tokenResponse)
+        resolve(`You are signed in as ${this.email.value}`)
       })
       .catch(error  => {
         console.log('loginResponseError in loginPopup:', error);
-        reject(error)
+        reject(new Error(`Login failed: ${error.message}`))
       })
     })
     .catch(error  => {
       console.log('loginResponseError getToken:', error);
-      reject(error)
+      reject(new Error(`Login failed: ${error.message}`))
     })
   })
 }
 logout(vm) {
-  return new Promise((resolve) => {
     this.app.logout();
     this.setLoggedIn(false,vm)
-    vm.$toasted.show('You are signed out!', { type: "success", duration: 3000 })
-    resolve()
-  })
+    return "You are signed out"
 }
-toggleLogin(vm){
-  console.log("toggleLogin",vm)
+toggleLogin(vm) {
+  return new Promise((resolve, reject) => {
   this.checkLoggedIn(vm)
   .then(() => {
-    this.logout(vm).then(() => {
-      console.log("You are logged out, you will be redirected to home page by openId")
-    })
+    resolve(this.logout(vm))
   })
   .catch(()=> {
-    console.log("not logged in, initializing login...")
     this.login(vm)
-    .then(() => {
-      console.log('You are logged in')
+    .then(message => {
+      resolve(message)
+    })
+    .catch(error => {
+      reject(error)
     })
   })
+})
 }
 }
-

@@ -21,29 +21,26 @@ export default {
   components: { Post },
   setup() {
     const posts = reactive([])
-    console.log('begins')
     const pagination = usePagination({ perPage: 9 })
     pagination.total.value = 100
 
-    const { loading, error, result, use: getPosts } = usePromiseFn(
-      (offset, perPage) =>
+    const fetchPosts =  (offset, perPage) =>
         blog.get({
           start: offset,
           limit: perPage,
         })
-    )
+  
+    const { loading, error, result, use } = usePromiseFn(fetchPosts)
+     
     function next() {
-      console.log('next')
       !loading.value && pagination.next()
     }
 
     watch(pagination.currentPage, () => {
-      console.log('watch')
-      getPosts(pagination.offset.value, pagination.perPage.value)
+      use(pagination.offset.value, pagination.perPage.value)
     })
 
     watch(result, (result) => {
-      console.log('wathc result',result)
       result && posts.push(...result.data)
     })
 

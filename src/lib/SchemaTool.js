@@ -4,7 +4,7 @@ export class Schematool
     this.schema = schema
   }
   editFields() {
-    return this.schema.Props.filter( ({ Hidden }) => { return !Hidden })
+    return !this.schema ? null : this.schema.Props.filter( ({ Hidden }) => { return !Hidden })
   }
   label(prop) {
     if (prop.Type === 'bool')

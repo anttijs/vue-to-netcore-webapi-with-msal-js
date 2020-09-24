@@ -1,7 +1,8 @@
 import Axios from 'axios'
-import { reactive, computed } from '@vue/composition-api'
+import { reactive, computed, watch, toRefs } from '@vue/composition-api'
 import { Schematool } from '@/lib/SchemaTool'
 import { cloneDeep } from 'lodash'
+import usePromiseFn from '../composables/use-promise'
 
 const RESOURCE_NAME = process.env.VUE_APP_API_ENDPOINT
 
@@ -11,38 +12,36 @@ const apiMethods = Object.freeze([
   { GetList: "GetMovies",  GetSingle: "GetMovie",  Put: "PutMovie",  Post: "PostMovie",  Delete: "DeleteMovie",  TitleForList: "Movies", TitleForSingle: "Movie" },
 ])
 
-const getErrorText = (error) => {
-  if (error.response) {
-    // The request was made and the server responded with a status code
-    // that falls out of the range of 2xx
-    console.log(error.response.data);
-    console.log('CrudService:',error.response.status);
-    console.log('CrudService:',error.response.headers);
-    return `Operation failed. The server responded with error ${error.response.status}. ${error.response.data}`
-  } else if (error.request) {
-    // The request was made but no response was received
-    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-    // http.ClientRequest in node.js
-    console.log(error.request);
-    return `Operation failed. The server did not respond`
-  } else {
-    // Something happened in setting up the request that triggered an Error
-    console.log('Error', error.message);
-    return `Operation failed, reason ${error.message}`
+export const useNaming = (context) => {
+
+  const apiIndex = computed({
+    get: () => { 
+      return (context.root.$store.state.apiIndex && context.root.$store.state.apiIndex >= 0) ? context.root.$store.state.apiIndex : 0},
+    set: val => {
+      context.root.$store.commit('setApiIndex', val)
+    }
+  })
+
+  const apiIndexFromTitle = (title) => {
+    return apiMethods.findIndex(obj => obj.TitleForList === title) 
   }
+
+  const dtoList = computed(() => apiMethods.map(obj => obj.TitleForList))
+
+  const titleForList = computed(() => apiMethods[apiIndex.value].TitleForList )
+
+  const titleForSingle = (idx) => apiMethods[idx].TitleForSingle
+
+  return { apiIndex, apiIndexFromTitle, dtoList, titleForList, titleForSingle }
 }
 
-export const useCrudSingle = () => {
-
+export const useCrudSingle = (context) => {
   const state = reactive({ 
-    ok: false, 
-    loading: false, 
-    dto: {}, 
-    schematool: new Schematool(null), 
-    submitAttempted: false, 
-    copydto: {}  
+    dto: null, 
+    schematool: null, 
+    copydto: null  
   })
-  
+
   const get = (idx, id) => {
     const endpoint = `${RESOURCE_NAME}/${apiMethods[idx].GetSingle}/${id}`
     console.log('Axios.get, endpoint:',endpoint, 'apiIndex:', idx)
@@ -61,98 +60,52 @@ export const useCrudSingle = () => {
     return Axios.put(endpoint, dto)
   }
 
-  const doGet = (idx, id) => {
-    state.loading = true
-    state.ok = false
-    return new Promise((resolve, reject) => {
-    get(idx, id)
-      .then(response => {
-        state.schematool = new Schematool(response.data.schema)
-        state.dto = response.data.data || {}
-        state.copydto = cloneDeep(state.dto)
-        state.ok = true
-        resolve()
-      })
-      .catch(error => {
-        const txt = getErrorText(error)
-        state.ok = false
-        reject(new Error(txt))
-      })
-      .finally(() => state.loading = false)
-    })
-  }
+  const { loading, error, result, use } = usePromiseFn(get)
 
+  const { apiIndex, apiIndexFromTitle, titleForSingle } = useNaming(context)
+
+  watch(result, (result) => {
+    if (result) {
+      state.schematool = new Schematool(result.data.schema)
+      state.dto = result.data.data || {}
+      state.copydto = cloneDeep(state.dto)
+  }
+  })
+  
   const editFields = computed(() =>  {
     return state.schematool.editFields()
   })
-
   
-  const titleForSingle = (idx) => {
-    return apiMethods[idx].TitleForSingle
-  }
-
-  return { state, get, post, put, doGet, getErrorText, editFields,titleForSingle }
-}
-
-export const useNaming = (context) => {
-
-  const apiIndex = computed({
-    get: () => { 
-      return (context.root.$store.state.apiIndex && context.root.$store.state.apiIndex >= 0) ? context.root.$store.state.apiIndex : 0},
-    set: val => {
-      context.root.$store.commit('setApiIndex', val)
-    }
-  })
-  
-  const dtoList = computed(() => apiMethods.map(obj => obj.TitleForList))
-  const titleForList = computed(() => apiMethods[apiIndex.value].TitleForList )
-  
-  return { apiIndex, dtoList, titleForList }
+  return { loading, error, use, ...toRefs(state), post, put, editFields, titleForSingle, apiIndex, apiIndexFromTitle }
 }
 
 export const useCrudList = (context) => {
-  const state = reactive({
-    dtos: [],
-    schema: {},
-    loading: false,
-    ok: false
+
+  const state = reactive( { 
+    dtos: null,
+    schema: null
+
   })
-  
-  const { apiIndex, dtoList, titleForList } = useNaming(context)
   
   const getList = (idx) => {
     const endpoint = `${RESOURCE_NAME}/${apiMethods[idx].GetList}`
-    console.log('getList',endpoint)
-    return Axios.get(endpoint);
+    console.log('Axios.get, endpoint:',endpoint, 'apiIndex:', idx)
+    return Axios.get(endpoint)
   }
 
-  const doGetList = (idx) => {
-      state.loading = true
-      state.schema = {}
-      state.dtos = []
-      state.ok = false
-      return new Promise((resolve, reject) => {  
-      getList(idx)
-      .then(response => {
-        state.dtos = response.data.data || []   
-        state.schema = response.data.schema
-        state.ok = true
-        resolve(response.data) 
-      })
-      .catch(error => {
-        state.dtos = []
-        const txt = getErrorText(error)
-        state.ok = false
-        reject(new Error(txt))
-      })
-      .finally(() => {
-        state.loading = false
-      })
-    })
-  }
+  const { apiIndex, apiIndexFromTitle, dtoList, titleForList } = useNaming(context)
+  
+  const { loading, error, result, use } = usePromiseFn(getList)
 
+  watch(result, (result) => {
+    if (result) {
+      state.dtos = result.data.data
+      state.schema = result.data.schema
+    }
+  })
+  
   const fields = computed(() =>  {
-      if (!Array.isArray(state.dtos) || !state.dtos.length) {
+      if (!Array.isArray(state.dtos) || !state.length) {
         return []
       }
       if (!Array.isArray(state.schema.Props) || !state.schema.Props.length) {
@@ -163,11 +116,7 @@ export const useCrudList = (context) => {
   )
 
   const titleForSingle = computed(() => apiMethods[apiIndex.value].TitleForSingle )
-
-  const apiIndexFromTitle = (title) => {
-    return apiMethods.findIndex(obj => obj.TitleForList === title) 
-  }
-  
+    
   const dtoName = (id) => {
     const x = state.dtos.find(obj => obj.Id === id)
     if (x !== undefined) {
@@ -182,5 +131,6 @@ export const useCrudList = (context) => {
     return Axios.delete(endpoint, { headers: {"Authorization" : `Bearer ${token}`} });
   }
 
-  return { state, apiIndex, apiIndexFromTitle, doGetList, fields, dtoName, dtoList, titleForSingle, titleForList, deleteDto, getErrorText }
+  return { ...toRefs(state), loading, error, use, apiIndex, apiIndexFromTitle, fields, 
+          dtoName, dtoList, titleForSingle, titleForList, deleteDto }
 }
