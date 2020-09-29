@@ -83,7 +83,10 @@ export default {
     }    
 
     const onDelete = (id) =>  {
-     context.root.$AuthService.ensureLoggedIn(context.root).then(() => {
+     context.root.$AuthService.ensureLoggedIn(context.root).then(response => {
+       if (response.message) {
+         context.root.$toasted.show(response.message, { type: "success", duration: 3000, position: 'top-right' })
+       }
         const message = `Are you sure you want to delete information about ${titleForSingle.value.toLowerCase()} ${dtoName(id)}`
         context.root.$bvModal.msgBoxConfirm(message, {
           title: 'Confirmation'
@@ -102,7 +105,7 @@ export default {
 
     const { error: error2, result: result2, use: use2 } = usePromiseFn(deleteDto)
     const doDelete = (idx, id)=> {
-      context.root.$AuthService.getToken(context.root)
+      context.root.$AuthService.getToken()
       .then(tokenResponse => {
         use2(idx, id, tokenResponse.accessToken)
       })		

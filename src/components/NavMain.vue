@@ -27,12 +27,12 @@ export default {
   setup(props, context) {
     const { titleForList } = useNaming(context)
     const toggleLogin = () => {
-      context.root.$AuthService.toggleLogin(context.root)
-      .then(message => {context.root.$toasted.show(message, { type: "success", duration: 3000 })})
-      .catch(error => {context.root.$toasted.show(error.message, { type: "error", duration: 5000 })})
+      context.root.$AuthService.toggleLogin()
+      .then(response => {context.root.$toasted.show(response.message, { type: "success", duration: 3000, position: 'top-right' })})
+      .catch(error => {context.root.$toasted.show(error.message, { type: "error", duration: 5000, position: 'top-right' })})
     }
     //refresh signed in status
-    context.root.$AuthService.checkLoggedIn(context.root)
+    context.root.$AuthService.checkLoggedIn()
     return { toggleLogin, titleForList }
   }
 }

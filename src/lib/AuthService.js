@@ -43,33 +43,32 @@ constructor() {
  
 }
 
-getToken(vm) {
+getToken() {
   console.log('getting jwt token...')
   return new Promise((resolve, reject) => {  
     this.app.acquireTokenSilent(this.tokenRequest)
     .then(authResponse => { 
-      this.setLoggedIn(true,vm,authResponse)
+      this.setLoggedIn(true,authResponse)
       resolve(authResponse)
     })
     .catch(error => {
       console.log("fallback to interaction when silent call fails", error)
       this.app.acquireTokenPopup(this.tokenRequest)
       .then(authResponse => {  
-        this.setLoggedIn(true,vm,authResponse)
+        this.setLoggedIn(true,authResponse)
         resolve(authResponse)
       })
       .catch(error => {
-        this.setLoggedIn(false,vm)
+        this.setLoggedIn(false)
         reject(error)
       })
     })
   })
 }
 
-setLoggedIn(loggedIn, vm, authResponse) {
+setLoggedIn(loggedIn, authResponse) {
   this.loggedIn.value = loggedIn
-  vm.$store.commit('setLoggedIn', loggedIn)
-  this.email.value=''
+  this.email.value = ''
   if (loggedIn) {
     console.log("token acquired:",authResponse);
     if ( authResponse.idToken.claims.hasOwnProperty('emails') &&
@@ -80,16 +79,15 @@ setLoggedIn(loggedIn, vm, authResponse) {
   }
 }
 
-checkLoggedIn(vm) {
-  console.log("checkLoggedIn", vm)
+checkLoggedIn() {
   return new Promise((resolve, reject) => {  
     this.app.acquireTokenSilent(this.tokenRequest)
     .then(authResponse => { 
-      this.setLoggedIn(true,vm,authResponse)
+      this.setLoggedIn(true, authResponse)
       resolve(authResponse)
     })
     .catch(error => {
-      this.setLoggedIn(false,vm)
+      this.setLoggedIn(false)
       console.log('failed to acquire token silently -> not logged in')
       reject(error)
     })
@@ -98,9 +96,9 @@ checkLoggedIn(vm) {
 
 ensureLoggedIn(vm) {
   return new Promise((resolve, reject) => {
-    this.checkLoggedIn(vm)
+    this.checkLoggedIn()
     .then(tokenResponse => {
-      resolve(tokenResponse)
+      resolve( { tokenResponse: tokenResponse, message: null } )
     })
     .catch(() => {
       const message = `You need to be signed in to perform this operation. Do you want to sign in now?`
@@ -109,8 +107,8 @@ ensureLoggedIn(vm) {
       })
       .then(value => {
           if (value === true) {
-            this.login(vm).then(message => {
-                resolve(message)
+            this.login().then(response => {
+                resolve(response)
             })
             .catch(error => {
               reject(error)
@@ -125,15 +123,15 @@ ensureLoggedIn(vm) {
 }
 
 // signin and acquire a token silently with POPUP flow. Fall back in case of failure with silent acquisition to popup
-login(vm) {
+login() {
   return new Promise((resolve, reject) => {
     this.app.loginPopup()
     .then(loginResponse => {
       console.log('loginPopup, loginResponse', loginResponse)
-      this.getToken(vm)
+      this.getToken()
       .then(tokenResponse => {
         console.log('token aquired after login, tokenresponse:',tokenResponse)
-        resolve(`You are signed in as ${this.email.value}`)
+        resolve( { tokenResponse: tokenResponse, message: `You are signed in as ${this.email.value}` } )
       })
       .catch(error  => {
         console.log('loginResponseError in loginPopup:', error);
@@ -146,21 +144,21 @@ login(vm) {
     })
   })
 }
-logout(vm) {
+logout() {
     this.app.logout();
-    this.setLoggedIn(false,vm)
-    return "You are signed out"
+    this.setLoggedIn(false)
+    return { message: "You are signed out" }
 }
-toggleLogin(vm) {
+toggleLogin() {
   return new Promise((resolve, reject) => {
-  this.checkLoggedIn(vm)
+  this.checkLoggedIn()
   .then(() => {
-    resolve(this.logout(vm))
+    resolve(this.logout())
   })
   .catch(()=> {
-    this.login(vm)
-    .then(message => {
-      resolve(message)
+    this.login()
+    .then(response => {
+      resolve(response)
     })
     .catch(error => {
       reject(error)
